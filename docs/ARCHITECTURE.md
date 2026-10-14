@@ -99,7 +99,7 @@ The agent goal asks for up to `top_n` matching products from the first results p
 
 `best_offer()` takes the minimum price among offers where `in_stock is not False`. Missing availability is therefore eligible. Explicitly unavailable offers remain visible but cannot win. Equal-price ties resolve to the first encountered offer; because results arrive in completion order, the winning store can vary between tied runs.
 
-The UI computes ties and cross-store savings separately from all returned offers, including unavailable ones. It does not verify that variants or purchase conditions match. There is no delivery-fee, bank-offer, coupon, membership, or tax normalization. Interpret the result as the lowest eligible returned listing, not a guaranteed checkout price.
+The UI displays equal-price ties among eligible offers, labels unknown availability, and excludes explicitly unavailable listings from its lowest-price display. It no longer claims cross-store savings because the backend does not verify that variants or purchase conditions match. There is no delivery-fee, bank-offer, coupon, membership, or tax normalization. Interpret the result as the lowest eligible returned listing, not a guaranteed checkout price.
 
 ## Concurrency, retries, and time limits
 
@@ -146,8 +146,8 @@ When `DEALSCOUT_REPLAY` is nonempty, `_replay_run()` reads recording arrays, fin
 - The loopback server is intended for local use. It lacks authentication, request-level rate limits, robust input validation, and production deployment support.
 - Extracted text is escaped in the UI, but outgoing URLs do not have a strict HTTP(S)/host allowlist. Confirmation is not URL validation.
 - Closing the browser, stopping the process, or losing the stream does not reliably cancel remote runs. Repeating a check can create additional paid work.
-- The dashboard has no history browser despite the history API. Watch mode belongs to the CLI; no durable scheduler or push notifications are implemented.
-- Unknown stock, variants, and incomplete coverage constrain price comparisons. An all-out-of-stock run currently uses generic “No offers found” wording even when listings are displayed.
+- The dashboard shows recent query summaries from the history API. Watch mode belongs to the CLI; no durable scheduler or push notifications are implemented.
+- Unknown stock, variants, and incomplete coverage constrain price comparisons. An all-out-of-stock run keeps the listings visible and says no available offer was found.
 
 ## Extending the app
 
@@ -155,4 +155,4 @@ To add a store, add its key, name, and encoded-query URL template to `STORES` in
 
 To change extraction fields, update `OUTPUT_SCHEMA`, the goal, `Offer`, `parse_offers()`, serialization, and both presentation layers together. To change availability policy, align best-offer selection, UI ties/savings, and history rather than modifying only one calculation.
 
-Future work described in [the UI proposal](UI_PLAN.md) includes explicit unknown-stock labels, better result hierarchy, and recent checks. Durable jobs/cancellation, structured outcome and alert types, variant-aware history, timezone-aware timestamps, and concurrency-safe persistence require backend changes. They are not implemented by this documentation update.
+[The UI design notes](UI_PLAN.md) include further ideas. Durable jobs/cancellation, structured outcome and alert types, variant-aware history, timezone-aware timestamps, and concurrency-safe persistence require backend changes.

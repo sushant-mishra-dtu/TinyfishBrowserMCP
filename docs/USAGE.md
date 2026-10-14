@@ -20,7 +20,7 @@ Start the app:
 python server.py
 ```
 
-Open [http://localhost:8787](http://localhost:8787). Enter a product model, optionally enter a target price in INR, choose stores, and select **Scout prices**. Store cards show queued/browsing progress, live browser links when available, and offers as checks finish. The final summary appears when all selected checks finish. Product links open a confirmation dialog.
+Open [http://localhost:8787](http://localhost:8787). Enter a product model, optionally enter a target price in INR, choose stores, and select **Compare prices**. Store cards show queued/browsing progress, live browser links when available, and offers as checks finish. The final summary appears when all selected checks finish. Use the comparison's stock filter, store sort, and extra-match disclosures to inspect offers. Product links open a confirmation dialog. Recent checks can refill the search form.
 
 Use Ctrl+C in the server terminal to stop the local process. Closing a browser tab does not cancel its backend worker or guarantee cancellation of remote TinyFish runs.
 
@@ -69,7 +69,7 @@ For CLI replay in a POSIX shell:
 DEALSCOUT_REPLAY=1 python dealscout.py "sony wh-1000xm5" --target 20000
 ```
 
-Any nonempty value enables replay, including `0`. Unset the variable to return to live mode. Replay displays `[replay]` in activity messages but has no persistent demo badge, and its normal summary wording should not be read as a fresh quote. It does not emit a live streaming URL.
+Any nonempty value enables replay, including `0`. Unset the variable to return to live mode. Replay displays `[replay]` in activity messages and a persistent **Recorded demo** badge once activity begins. Recorded prices are not fresh quotes. Replay does not emit a live streaming URL.
 
 **Replay writes to the same `price_history.json` as live checks.** If you need to preserve a live-only history, back up and temporarily move that file before a demo, then restore it after stopping the app. Runtime file paths are resolved beside `agent.py`, not from the shell's working directory.
 

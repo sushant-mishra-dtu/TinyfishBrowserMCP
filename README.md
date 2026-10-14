@@ -6,7 +6,7 @@ Deal Scout turns a product query into a live comparison across Amazon.in, Flipka
 
 Type a model such as `sony wh-1000xm5`, optionally set a target price, and select your stores. Each store gets a TinyFish agent that reads search results, filters unrelated listings, and returns structured offers. Deal Scout shows progress, compares returned prices, and records changes since the previous check.
 
-[Setup and usage](docs/USAGE.md) · [Technical architecture](docs/ARCHITECTURE.md) · [Demo and submission](docs/SUBMISSION.md) · [UI design proposal](docs/UI_PLAN.md)
+[Setup and usage](docs/USAGE.md) · [Technical architecture](docs/ARCHITECTURE.md) · [Demo and submission](docs/SUBMISSION.md) · [UI design notes](docs/UI_PLAN.md)
 
 ![Deal Scout result dashboard](docs/screenshots/06-live-run-result.jpg)
 
@@ -34,7 +34,7 @@ Requires **Python 3.10+**. The app uses only the Python standard library; no pac
 python server.py --replay
 ```
 
-Open [localhost:8787](http://localhost:8787), enter **sony wh-1000xm5**, and click **Scout prices**. Replay needs no API key and uses the bundled recording. Other queries require matching recordings. Replay progress is marked `[replay]`; the dashboard still uses its normal result labels. Replay also writes to local price history.
+Open [localhost:8787](http://localhost:8787), enter **sony wh-1000xm5**, and click **Compare prices**. Replay needs no API key and uses the bundled recording. Other queries require matching recordings. The dashboard displays a **Recorded demo** badge once replay activity begins. Replay also writes to local price history.
 
 ### Check live prices
 
@@ -98,7 +98,7 @@ TinyfishBrowserMCP/
 │   ├── ARCHITECTURE.md
 │   ├── USAGE.md
 │   ├── SUBMISSION.md
-│   ├── UI_PLAN.md            # Proposed UI improvements
+│   ├── UI_PLAN.md            # UI design notes and remaining ideas
 │   └── screenshots/
 └── .claude/
     ├── launch.json           # Live and replay launch configurations
@@ -111,6 +111,6 @@ The application previously lived inside a nested `dealscout/` folder. Its runtim
 
 “Best deal” means the lowest eligible price among the offers returned by this check, not an exhaustive market search. Agents inspect the first results page and are asked for up to three matches per store by default.
 
-Unknown availability remains eligible for the best offer. History records each store's minimum returned price, including out-of-stock listings; it does not retain variant or stock details. The current dashboard's tie and savings calculations also include all returned offers. Check product variants, availability, delivery charges, and conditional discounts on the store before deciding.
+Unknown availability remains eligible for the best offer, and the dashboard labels it as unconfirmed. History records each store's minimum returned price, including out-of-stock listings; it does not retain variant or stock details. The dashboard excludes explicitly out-of-stock offers when displaying the lowest eligible price and ties. Check product variants, availability, delivery charges, and conditional discounts on the store before deciding.
 
 This is a local prototype: history is a JSON file, the server has no authentication, and there is no hosted scheduler or push notification service. It binds to `127.0.0.1`. The [architecture guide](docs/ARCHITECTURE.md) documents these limits and the distinction between shipped behavior and proposed work.

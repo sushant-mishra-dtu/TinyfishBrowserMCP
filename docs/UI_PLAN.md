@@ -1,6 +1,6 @@
 # Deal Scout UI plan
 
-Planning handoff · 14 October 2026. This is a design proposal, not the shipped feature list. See [technical architecture](ARCHITECTURE.md) for current behavior and the [README](../README.md) for setup. The app files now live at the repository root.
+Design notes · 14 October 2026. The search, progress, comparison, confirmation, recent-check, responsive, and replay-label ideas below are implemented in `ui.html`; backend-dependent ideas remain proposals. See [technical architecture](ARCHITECTURE.md) for the API contract and the [README](../README.md) for setup.
 
 ## Product direction
 
