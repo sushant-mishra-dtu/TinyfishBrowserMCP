@@ -114,5 +114,20 @@
     }
    ]
   }
+ },
+ {
+  "store": "reliance",
+  "url": "https://www.reliancedigital.in/products?q=sony+wh-1000xm5",
+  "run_id": "be207f35-941e-4e64-ba90-e5ae941751f5",
+  "status": "COMPLETED",
+  "steps": [
+   "Visiting Reliance Digital search",
+   "Filtering out WF-1000XM5 / XM6 / CH520 listings",
+   "Opening the one matching product to check stock"
+  ],
+  "result": {
+   "products": [],
+   "blocked_reason": "The only matching Sony WH-1000XM5 listing on Reliance Digital shows 'Currently unavailable online' (out of stock). Other results were different models (WF-1000XM5, WH-1000XM6, 1000X The Collexion)."
+  }
  }
 ]

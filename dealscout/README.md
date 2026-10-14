@@ -25,6 +25,25 @@ the product page, and that waits for you to confirm.
 
 Because the goal is natural language, it works for **any product query**, not a hardcoded page.
 
+## Real results from live runs (14 Oct 2026, "sony wh-1000xm5")
+
+| Store | Cheapest found | Note |
+|---|---|---|
+| Flipkart | Rs 19,989 (MRP 34,990, 43% off) | |
+| Croma | Rs 19,989 | in stock, 3 colours |
+| Amazon.in | Rs 27,490 | **Rs 7,501 more** |
+| Reliance Digital | — | agent opened the only matching listing (Rs 17,990) and found it *"Currently unavailable online"*, so it was excluded instead of shown as the best deal |
+
+Bugs the live runs caught (and fixes):
+
+- The first prompt asked for "the top 3" matches; when a store had only one real match the agent
+  returned nothing. The goal now says "up to 3 … even if it is only one".
+- On Amazon, one agent kept re-sorting and paging for 8+ minutes. The goal now says "first results
+  page only, read prices from the cards", and any store still browsing after 240s
+  (`DEALSCOUT_MAX_SECONDS`) has its TinyFish run cancelled and is reported as timed out.
+- After a server restart, the browser's EventSource auto-reconnected and silently started a second
+  scout (more credits spent). The UI now never auto-reconnects, and cancelled runs are never retried.
+
 ## Failure handling
 
 - A store that errors or times out is retried once (system errors only), then reported as
@@ -33,11 +52,15 @@ Because the goal is natural language, it works for **any product query**, not a 
   Deal Scout shows that reason instead of inventing a price.
 - Out-of-stock listings are shown but never picked as "best deal".
 - Missing API key or network errors are reported clearly.
+- TinyFish concurrency limit: extra runs queue on TinyFish's side. The UI says "waiting for a
+  TinyFish browser" until a browser is free, and HTTP 429/503 responses are retried with backoff.
+- Each store's card fills in as soon as that store finishes, so one slow site doesn't hide the others.
 
 ## Run it
 
+Put your key in `dealscout/.env` (gitignored) as `TINYFISH_API_KEY=sk-tinyfish-...`, or export it.
+
 ```bash
-set TINYFISH_API_KEY=sk-tinyfish-...      # PowerShell: $env:TINYFISH_API_KEY="..."
 python server.py                          # web UI at http://localhost:8787
 python dealscout.py "sony wh-1000xm5" --target 20000
 python dealscout.py "boat airdopes 141" --stores amazon flipkart

@@ -106,14 +106,19 @@ $("#f").addEventListener("submit", e => {
   es = new EventSource(`/api/scout?q=${encodeURIComponent(q)}&target=${encodeURIComponent(target)}&stores=${stores.join(",")}`);
   es.addEventListener("agent", m => {
     const ev = JSON.parse(m.data), s = ev.store;
-    if (ev.type === "STARTED") { setPill(s, "run", "browsing"); log(s, "agent launched"); }
-    else if (ev.type === "STREAMING_URL") card(s).querySelector(".live").innerHTML = `<a href="${esc(ev.streaming_url)}" target="_blank" rel="noopener">▶ watch the agent live</a>`;
+    if (ev.type === "STARTED") { setPill(s, "run", "queued"); log(s, "run created, waiting for a TinyFish browser"); }
+    else if (ev.type === "STORE_RESULT") renderStore(ev.result);
+    else if (ev.type === "STREAMING_URL") {
+      setPill(s, "run", "browsing"); log(s, "browser ready");
+      card(s).querySelector(".live").innerHTML = `<a href="${esc(ev.streaming_url)}" target="_blank" rel="noopener">▶ watch the agent live</a>`;
+    }
     else if (ev.type === "PROGRESS") log(s, ev.purpose);
     else if (ev.type === "COMPLETE") log(s, "finished: " + ev.status);
   });
   es.addEventListener("done", m => { es.close(); finish(JSON.parse(m.data)); });
   es.addEventListener("fatal", m => { es.close(); reset(); showAlerts(["Error: " + JSON.parse(m.data).error]); });
-  es.onerror = () => { if (es.readyState === 2) reset(); };
+  // Never auto-reconnect: a reconnect would silently start a second scout (and spend credits).
+  es.onerror = () => { es.close(); reset(); showAlerts(["Lost connection to the Deal Scout server. Results so far are shown; run again to retry."]); };
 });
 
 function reset() { $("#go").disabled = false; $("#go").textContent = "Scout prices"; }
@@ -126,7 +131,11 @@ function showAlerts(list) {
 function finish(data) {
   reset();
   const rows = [];
-  data.results.forEach(r => {
+  data.results.forEach(r => { renderStore(r); r.offers.forEach(o => rows.push({ ...o, store: r.store })); });
+  finishBest(data, rows);
+}
+
+function renderStore(r) {
     const c = card(r.store);
     if (!r.ok) { setPill(r.store, "fail", "failed"); c.querySelector(".offers").innerHTML = `<div class="note">Couldn't read prices: ${esc(r.error)}</div>`; return; }
     setPill(r.store, "ok", `${r.offers.length} found · ${r.seconds}s`);
@@ -134,8 +143,9 @@ function finish(data) {
       <div class="offer"><span class="price">${rs(o.price)}</span>${o.mrp && o.mrp > o.price ? `<span class="mrp">${rs(o.mrp)}</span>` : ""}${o.discount_pct ? `<span class="off">${o.discount_pct}% off</span>` : ""}
       <div>${o.url ? `<a href="#" data-url="${esc(o.url)}" data-label="${esc(r.store + ': ' + o.title)}">${esc(o.title)}</a>` : esc(o.title)}</div>
       ${o.rating ? `<div class="note">★ ${esc(o.rating)}</div>` : ""}${o.in_stock === false ? `<div class="note" style="color:var(--bad)">out of stock</div>` : ""}</div>`).join("");
-    r.offers.forEach(o => rows.push({ ...o, store: r.store }));
-  });
+}
+
+function finishBest(data, rows) {
   showAlerts(data.alerts || []);
   const failed = data.results.filter(r => !r.ok).map(r => r.store);
   if (data.best) {

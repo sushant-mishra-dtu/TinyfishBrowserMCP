@@ -2,6 +2,7 @@
 
   python dealscout.py "sony wh-1000xm5"
   python dealscout.py "iphone 16 128gb" --target 65000 --stores amazon flipkart
+  python dealscout.py "sony wh-1000xm5" --target 18000 --every 360   # watch every 6h
 """
 from __future__ import annotations
 
@@ -23,7 +24,19 @@ def main() -> int:
     p.add_argument("--top", type=int, default=3, help="listings per store")
     p.add_argument("--parallel", type=int, default=4)
     p.add_argument("--yes-open", action="store_true", help="skip the confirmation before opening the best deal")
+    p.add_argument("--every", type=float, metavar="MINUTES", help="keep watching: re-check every N minutes and report drops")
     a = p.parse_args()
+
+    if a.every:
+        import time
+        print(f"Watching '{a.query}' every {a.every:g} min. Ctrl+C to stop. (Watch mode never opens or buys anything.)")
+        while True:
+            check(a, interactive=False)
+            time.sleep(a.every * 60)
+    return check(a, interactive=True)
+
+
+def check(a, interactive: bool) -> int:
 
     print(f"\nDeal Scout: '{a.query}' across {', '.join(STORES[s]['name'] for s in a.stores)}\n")
 
@@ -75,7 +88,7 @@ def main() -> int:
 
     print(f"\nBEST DEAL: Rs {best.price:,.0f} on {best.store}\n  {best.title}\n  {best.url}")
     print("\nDeal Scout never buys, adds to cart or logs in for you.")
-    if best.url:
+    if best.url and interactive:
         ok = a.yes_open or input("Open this product page in your browser so you can decide? [y/N] ").strip().lower() == "y"
         if ok:
             webbrowser.open(best.url)

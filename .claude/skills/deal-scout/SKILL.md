@@ -30,7 +30,9 @@ websites with the TinyFish connector; the user makes every buying decision.
    > You are on the {store} search results page for "{product}". If a login, location or
    > cookie popup appears, close or dismiss it (do NOT log in). Pick UP TO 3 listings that
    > are actually "{product}" (skip accessories and unrelated items). If fewer match, return just
-   > those, even if it is only one. For each, extract: title,
+   > those, even if it is only one. Work from the first results page only (no re-sorting, no page 2)
+   > and read prices from the result cards, except: open the single cheapest match to confirm it is
+   > available online (in_stock false if out of stock / currently unavailable). For each, extract: title,
    > current selling price in INR as a plain number, MRP if shown, rating, in-stock flag and the
    > absolute product URL. Do NOT add to cart, do NOT click buy, do NOT enter personal details.
    > Only if blocked by a captcha or there are no matching results at all, return an empty products list and

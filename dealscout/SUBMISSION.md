@@ -22,6 +22,19 @@ with the rest; prices are never invented.
 
 **Works across inputs:** any product query, any subset of stores, optional target price.
 
+## 60-second demo recording script
+
+1. `python server.py` and open http://localhost:8787 (blur nothing personal here — no login is used).
+2. Type **sony wh-1000xm5**, target **21000**, click *Scout prices*. Show 4 cards going live, click one
+   **▶ watch the agent live** link to show the TinyFish browser working.
+3. Result: Rs 19,989 on Flipkart/Croma, **"You save Rs 7,501 vs Amazon.in"**, TARGET HIT alert,
+   Reliance card says the only match is out of stock (failure handled, not faked).
+4. Click *Open this deal…* → show the confirmation ("will not add to cart, log in, or pay") → *Not now*.
+5. Run a second product (e.g. **apple airpods pro 2**) to show it isn't hardcoded.
+6. Terminal: `python dealscout.py "sony wh-1000xm5" --target 18000 --every 360` (watch mode).
+
+Screenshots are in `screenshots/`.
+
 ## LinkedIn post (draft)
 
 Built a personal agent at the @TinyFish × DTU workshop: **Deal Scout** 🛒

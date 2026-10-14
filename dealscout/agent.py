@@ -19,6 +19,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
 
+# Load TINYFISH_API_KEY etc. from a local .env (kept out of git).
+_env = Path(__file__).with_name(".env")
+if _env.exists():
+    for _line in _env.read_text(encoding="utf-8").splitlines():
+        if "=" in _line and not _line.lstrip().startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 API_BASE = os.environ.get("TINYFISH_API_BASE", "https://agent.tinyfish.ai")
 HISTORY_FILE = Path(__file__).with_name("price_history.json")
 
@@ -72,6 +80,10 @@ GOAL = (
     "Look at the search results and pick UP TO {n} listings that are actually "
     '"{query}" (skip sponsored accessories, cases, cables or unrelated items). '
     "If fewer than {n} match, return just the ones that do, even if it is only one. "
+    "Work from the first results page only: do not change the sort order or go to page 2, and "
+    "read prices from the result cards instead of opening each product page. "
+    "Exception: open the product page of the single cheapest match to confirm it can be bought "
+    "online (set in_stock false if it says out of stock, sold out or currently unavailable). "
     "For each, extract: title, current selling price in INR as a plain number, "
     "MRP/original price as a number if shown, rating text if shown, whether it is in stock, "
     "and the absolute product URL. "
@@ -129,6 +141,7 @@ def run_agent_sse(
     on_event: Optional[Callable[[dict], None]] = None,
     stealth: bool = True,
     timeout: int = 300,
+    max_browse_seconds: int = int(os.environ.get("DEALSCOUT_MAX_SECONDS", "240")),
 ) -> dict:
     """Run one TinyFish agent and stream its events. Returns the COMPLETE event."""
     body = {
@@ -157,6 +170,8 @@ def run_agent_sse(
     except urllib.error.URLError as e:
         raise TinyFishError(f"Network error: {e.reason}") from e
 
+    browsing_since = None
+    run_id = None
     with resp:
         for raw in resp:
             line = raw.decode("utf-8", errors="replace").strip()
@@ -166,11 +181,29 @@ def run_agent_sse(
                 event = json.loads(line[5:].strip())
             except json.JSONDecodeError:
                 continue
+            run_id = event.get("run_id") or run_id
+            if event.get("type") == "STREAMING_URL":
+                browsing_since = time.time()
             if on_event:
                 on_event(event)
             if event.get("type") == "COMPLETE":
                 return event
+            # Don't let one site hold up the whole comparison (heartbeats keep this loop ticking).
+            if browsing_since and time.time() - browsing_since > max_browse_seconds:
+                _cancel(run_id)
+                raise TinyFishError(f"Timed out after {max_browse_seconds}s on the site; cancelled the run")
     raise TinyFishError("Stream ended without a COMPLETE event")
+
+
+def _cancel(run_id: Optional[str]) -> None:
+    if not run_id:
+        return
+    try:
+        urllib.request.urlopen(urllib.request.Request(
+            f"{API_BASE}/v1/runs/{run_id}/cancel", data=b"{}", method="POST",
+            headers={"X-API-Key": _api_key(), "Content-Type": "application/json"}), timeout=15).close()
+    except Exception:
+        pass
 
 
 RECORDINGS = Path(__file__).with_name("recordings")
@@ -269,15 +302,26 @@ def scout_store(
             on_event(store["name"], ev)
 
     runner = _replay_run if os.environ.get("DEALSCOUT_REPLAY") else run_agent_sse
-    for attempt in range(retries + 1):
+    attempt = 0
+    while True:
         try:
             done = runner(url, goal, OUTPUT_SCHEMA, relay)
         except TinyFishError as e:
             res.error = str(e)
-            if attempt < retries and "HTTP 4" not in str(e):
+            busy = "HTTP 429" in str(e) or "HTTP 503" in str(e)
+            # Concurrency limit / busy: wait and retry a few times. Other 4xx (bad key) won't fix themselves.
+            if busy and attempt < 4:
+                if on_event:
+                    on_event(store["name"], {"type": "PROGRESS", "purpose": "TinyFish busy, waiting for a free browser..."})
+                time.sleep(15)
+                attempt += 1
+                continue
+            if attempt < retries and "HTTP 4" not in str(e) and "Timed out" not in str(e):
                 time.sleep(3)
+                attempt += 1
                 continue
             break
+        attempt += 1
         if done.get("status") == "COMPLETED":
             result = done.get("result") or {}
             res.offers = parse_offers(store["name"], result, url)
@@ -285,12 +329,18 @@ def scout_store(
             if not res.ok:
                 reason = result.get("blocked_reason") if isinstance(result, dict) else None
                 res.error = reason or "No matching products found"
+                # Empty list with no explanation is usually a flaky extraction: try once more.
+                if not reason and attempt <= retries:
+                    if on_event:
+                        on_event(store["name"], {"type": "PROGRESS", "purpose": "Agent returned nothing without a reason, retrying once"})
+                    continue
             break
         res.error = done.get("error") or done.get("help_message") or done.get("status")
-        if attempt < retries:
+        if done.get("status") != "CANCELLED" and attempt <= retries:
             if on_event:
                 on_event(store["name"], {"type": "PROGRESS", "purpose": f"Retrying after: {res.error}"})
             continue
+        break
     res.seconds = round(time.time() - start, 1)
     return res
 
@@ -308,9 +358,12 @@ def scout(
         futs = {pool.submit(scout_store, s, query, top_n, on_event): s for s in stores}
         for f in as_completed(futs):
             try:
-                results.append(f.result())
+                r = f.result()
             except Exception as e:  # never let one store kill the whole comparison
-                results.append(StoreResult(store=STORES[futs[f]]["name"], ok=False, error=repr(e)))
+                r = StoreResult(store=STORES[futs[f]]["name"], ok=False, error=repr(e))
+            results.append(r)
+            if on_event:
+                on_event(r.store, {"type": "STORE_RESULT", "result": results_to_json([r])[0]})
     return results
 
 
