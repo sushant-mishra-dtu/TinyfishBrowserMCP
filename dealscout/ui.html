@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deal Scout</title>
+<style>
+  :root { --bg:#0b0f14; --panel:#131a22; --line:#223042; --text:#e6edf3; --mute:#8b9bb0; --acc:#22c55e; --warn:#f59e0b; --bad:#ef4444; --blue:#38bdf8; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { margin:0 0 4px; font-size:28px; } h1 span { color:var(--acc); }
+  .sub { color:var(--mute); margin-bottom:20px; }
+  form { display:flex; flex-wrap:wrap; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  input[type=text], input[type=number] { background:#0b1118; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:15px; }
+  #q { flex:1 1 320px; } #target { width:170px; }
+  button { background:var(--acc); color:#04120a; border:0; border-radius:8px; padding:10px 18px; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:wait; }
+  .stores { display:flex; gap:12px; align-items:center; flex-wrap:wrap; width:100%; color:var(--mute); font-size:14px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-top:18px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; min-height:150px; }
+  .card h3 { margin:0 0 6px; font-size:16px; display:flex; justify-content:space-between; align-items:center; }
+  .pill { font-size:11px; padding:2px 8px; border-radius:99px; border:1px solid var(--line); color:var(--mute); font-weight:600; }
+  .pill.run { color:var(--blue); border-color:var(--blue); } .pill.ok { color:var(--acc); border-color:var(--acc); } .pill.fail { color:var(--bad); border-color:var(--bad); }
+  .log { font:12px/1.45 ui-monospace,Consolas,monospace; color:var(--mute); max-height:130px; overflow:auto; margin-top:6px; }
+  .log div::before { content:"› "; color:var(--blue); }
+  .live a { color:var(--blue); font-size:12px; }
+  .offer { border-top:1px solid var(--line); padding:8px 0; font-size:13px; }
+  .price { font-size:18px; font-weight:800; } .mrp { color:var(--mute); text-decoration:line-through; margin-left:6px; } .off { color:var(--acc); margin-left:6px; font-weight:700; }
+  .best { margin-top:18px; background:linear-gradient(135deg,#0f2a1b,#131a22); border:1px solid var(--acc); border-radius:12px; padding:18px; display:none; }
+  .best .big { font-size:30px; font-weight:900; color:var(--acc); }
+  .alerts { margin-top:12px; display:none; }
+  .alert { background:#2a1f0b; border:1px solid var(--warn); color:#fde68a; border-radius:8px; padding:8px 12px; margin-top:6px; font-size:14px; }
+  .note { color:var(--mute); font-size:13px; margin-top:8px; }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--line); } th { color:var(--mute); font-weight:600; }
+  dialog { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:12px; max-width:440px; }
+  dialog::backdrop { background:#000a; }
+  .row { display:flex; gap:8px; justify-content:flex-end; margin-top:14px; }
+  .ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  a { color:var(--blue); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Deal <span>Scout</span></h1>
+  <div class="sub">Your personal price agent. TinyFish web agents open Amazon, Flipkart, Croma and Reliance Digital at the same time, read real prices, and tell you where it's cheapest. It never buys anything.</div>
+
+  <form id="f">
+    <input id="q" type="text" placeholder='What do you want to buy? e.g. "sony wh-1000xm5"' required>
+    <input id="target" type="number" placeholder="Target price (Rs)" min="1">
+    <button id="go">Scout prices</button>
+    <div class="stores" id="stores"></div>
+  </form>
+
+  <div class="alerts" id="alerts"></div>
+  <div class="best" id="best"></div>
+  <div class="grid" id="grid"></div>
+  <div id="table"></div>
+</main>
+
+<dialog id="confirm">
+  <h3 style="margin-top:0">Open this deal?</h3>
+  <p id="confirmText"></p>
+  <p class="note">Deal Scout only opens the product page. It will not add to cart, log in, or pay. Checkout stays with you.</p>
+  <div class="row"><button class="ghost" id="no">Not now</button><button id="yes">Open product page</button></div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const rs = n => n == null ? "" : "Rs " + Math.round(n).toLocaleString("en-IN");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let STORES = {}, cards = {}, es = null, pendingUrl = null;
+
+fetch("/api/stores").then(r => r.json()).then(s => {
+  STORES = s;
+  $("#stores").innerHTML = "Stores: " + Object.entries(s).map(([k, v]) =>
+    `<label><input type="checkbox" value="${k}" checked> ${esc(v)}</label>`).join("");
+});
+
+function card(store) {
+  if (cards[store]) return cards[store];
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `<h3>${esc(store)} <span class="pill run">starting</span></h3><div class="live"></div><div class="log"></div><div class="offers"></div>`;
+  $("#grid").appendChild(el);
+  return cards[store] = el;
+}
+function log(store, text) {
+  const l = card(store).querySelector(".log");
+  const d = document.createElement("div"); d.textContent = text; l.appendChild(d); l.scrollTop = l.scrollHeight;
+}
+function setPill(store, cls, text) { const p = card(store).querySelector(".pill"); p.className = "pill " + cls; p.textContent = text; }
+
+$("#f").addEventListener("submit", e => {
+  e.preventDefault();
+  if (es) es.close();
+  const q = $("#q").value.trim(), target = $("#target").value;
+  const stores = [...document.querySelectorAll("#stores input:checked")].map(i => i.value);
+  if (!stores.length) return alert("Pick at least one store");
+  cards = {}; $("#grid").innerHTML = ""; $("#table").innerHTML = "";
+  $("#best").style.display = "none"; $("#alerts").style.display = "none";
+  stores.forEach(k => { card(STORES[k]); log(STORES[k], "queued"); });
+  $("#go").disabled = true; $("#go").textContent = "Agents working...";
+
+  es = new EventSource(`/api/scout?q=${encodeURIComponent(q)}&target=${encodeURIComponent(target)}&stores=${stores.join(",")}`);
+  es.addEventListener("agent", m => {
+    const ev = JSON.parse(m.data), s = ev.store;
+    if (ev.type === "STARTED") { setPill(s, "run", "browsing"); log(s, "agent launched"); }
+    else if (ev.type === "STREAMING_URL") card(s).querySelector(".live").innerHTML = `<a href="${esc(ev.streaming_url)}" target="_blank" rel="noopener">▶ watch the agent live</a>`;
+    else if (ev.type === "PROGRESS") log(s, ev.purpose);
+    else if (ev.type === "COMPLETE") log(s, "finished: " + ev.status);
+  });
+  es.addEventListener("done", m => { es.close(); finish(JSON.parse(m.data)); });
+  es.addEventListener("fatal", m => { es.close(); reset(); showAlerts(["Error: " + JSON.parse(m.data).error]); });
+  es.onerror = () => { if (es.readyState === 2) reset(); };
+});
+
+function reset() { $("#go").disabled = false; $("#go").textContent = "Scout prices"; }
+function showAlerts(list) {
+  if (!list.length) return;
+  $("#alerts").innerHTML = list.map(a => `<div class="alert">${esc(a)}</div>`).join("");
+  $("#alerts").style.display = "block";
+}
+
+function finish(data) {
+  reset();
+  const rows = [];
+  data.results.forEach(r => {
+    const c = card(r.store);
+    if (!r.ok) { setPill(r.store, "fail", "failed"); c.querySelector(".offers").innerHTML = `<div class="note">Couldn't read prices: ${esc(r.error)}</div>`; return; }
+    setPill(r.store, "ok", `${r.offers.length} found · ${r.seconds}s`);
+    c.querySelector(".offers").innerHTML = r.offers.sort((a, b) => a.price - b.price).map(o => `
+      <div class="offer"><span class="price">${rs(o.price)}</span>${o.mrp && o.mrp > o.price ? `<span class="mrp">${rs(o.mrp)}</span>` : ""}${o.discount_pct ? `<span class="off">${o.discount_pct}% off</span>` : ""}
+      <div>${o.url ? `<a href="#" data-url="${esc(o.url)}" data-label="${esc(r.store + ': ' + o.title)}">${esc(o.title)}</a>` : esc(o.title)}</div>
+      ${o.rating ? `<div class="note">★ ${esc(o.rating)}</div>` : ""}${o.in_stock === false ? `<div class="note" style="color:var(--bad)">out of stock</div>` : ""}</div>`).join("");
+    r.offers.forEach(o => rows.push({ ...o, store: r.store }));
+  });
+  showAlerts(data.alerts || []);
+  const failed = data.results.filter(r => !r.ok).map(r => r.store);
+  if (data.best) {
+    const b = data.best;
+    const cheapest = {};
+    rows.forEach(o => { cheapest[o.store] = Math.min(cheapest[o.store] ?? Infinity, o.price); });
+    const worst = Object.entries(cheapest).sort((x, y) => y[1] - x[1])[0];
+    const ties = Object.entries(cheapest).filter(([s, p]) => s !== b.store && p === b.price).map(([s]) => s);
+    const save = worst ? worst[1] - b.price : 0;
+    $("#best").innerHTML = `<div class="note">BEST DEAL RIGHT NOW</div><div class="big">${rs(b.price)} on ${esc(b.store)}</div>
+      <div>${esc(b.title)}</div>
+      ${ties.length ? `<div class="note">Same price on ${ties.map(esc).join(", ")}.</div>` : ""}
+      ${save > 0 ? `<div class="note" style="color:var(--acc);font-weight:700">You save ${rs(save)} vs buying on ${esc(worst[0])}.</div>` : ""}
+      ${failed.length ? `<div class="note">Couldn't check: ${failed.map(esc).join(", ")}, so the comparison uses the other stores.</div>` : ""}
+      <div class="note">Check #${data.runs} for this product. Run it again later and Deal Scout will tell you if the price dropped.</div>
+      ${b.url ? `<div class="row" style="justify-content:flex-start"><button data-url="${esc(b.url)}" data-label="${esc(b.store + ': ' + b.title + ' at ' + rs(b.price))}">Open this deal…</button></div>` : ""}`;
+    $("#best").style.display = "block";
+  } else {
+    showAlerts([...(data.alerts || []), "No offers found on any store. Try a more specific product name."]);
+  }
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-url]"); if (!t) return;
+  e.preventDefault(); pendingUrl = t.dataset.url;
+  $("#confirmText").textContent = t.dataset.label; $("#confirm").showModal();
+});
+$("#no").onclick = () => { pendingUrl = null; $("#confirm").close(); };
+$("#yes").onclick = () => { if (pendingUrl) window.open(pendingUrl, "_blank", "noopener"); $("#confirm").close(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+[
+ {
+  "store": "flipkart",
+  "url": "https://www.flipkart.com/search?q=sony+wh-1000xm5",
+  "run_id": "c32e6250-c450-4de4-be73-0aaf58e8ab30",
+  "status": "COMPLETED",
+  "steps": [
+   "Dismissing login popup",
+   "Scanning search results for 'sony wh-1000xm5'",
+   "Extracting price, MRP, rating and links"
+  ],
+  "result": {
+   "products": [
+    {
+     "mrp": 34990,
+     "url": "https://www.flipkart.com/sony-wh-1000xm5-wireless-noise-cancellation-ai-reduction-bluetooth/p/itm7f07dcc8df256?pid=ACCHGBCB34ATPVM7",
+     "price": 19989,
+     "title": "SONY WH-1000XM5 Wireless Noise Cancellation with AI Noise Reduction Bluetooth",
+     "rating": "4.6"
+    },
+    {
+     "mrp": 34990,
+     "url": "https://www.flipkart.com/sony-wh-1000xm5-wireless-noise-cancellation-ai-reduction-bluetooth/p/itmdec52bcb83eb9?pid=ACCHGBCBER76KTUB",
+     "price": 19989,
+     "title": "SONY WH-1000XM5 Wireless Noise Cancellation with AI Noise Reduction Bluetooth",
+     "rating": "4.6"
+    },
+    {
+     "mrp": 34990,
+     "url": "https://www.flipkart.com/sony-wh-1000xm5-wireless-noise-cancellation-ai-reduction-bluetooth/p/itm559158a5700c0?pid=ACCHGBCBNHYFSVFZ",
+     "price": 19989,
+     "title": "SONY WH-1000XM5 Wireless Noise Cancellation with AI Noise Reduction Bluetooth",
+     "rating": "4.6"
+    }
+   ]
+  }
+ },
+ {
+  "store": "croma",
+  "url": "https://www.croma.com/searchB?q=sony+wh-1000xm5%3Arelevance&text=sony+wh-1000xm5",
+  "run_id": "956facbe-a8b7-483c-8d43-551b672788a4",
+  "status": "COMPLETED",
+  "steps": [
+   "Closing location popup",
+   "Reading Croma results",
+   "Skipping accessories, extracting 3 matching listings"
+  ],
+  "result": {
+   "products": [
+    {
+     "mrp": 34990,
+     "url": "https://www.croma.com/sony-wh-1000xm5-bluetooth-headphone-with-mic-auto-noise-cancellation-optimizer-over-ear-black-/p/262565",
+     "price": 19989,
+     "title": "SONY WH-1000XM5 Bluetooth Headphone with Mic (Auto Noise Cancellation Optimizer, Over Ear, Black)",
+     "rating": "4.6",
+     "in_stock": true
+    },
+    {
+     "mrp": 34990,
+     "url": "https://www.croma.com/sony-wh-1000xm5-bluetooth-headphone-with-mic-auto-noise-cancelling-optimizer-over-ear-silver-/p/262566",
+     "price": 19989,
+     "title": "SONY WH-1000XM5 Bluetooth Headphone with Mic (Auto Noise Cancelling Optimizer, Over Ear, Silver)",
+     "rating": "4.3",
+     "in_stock": true
+    },
+    {
+     "mrp": 34990,
+     "url": "https://www.croma.com/sony-wh-1000xm5-bluetooth-headphone-with-mic-auto-noise-cancellation-optimizer-over-ear-blue-/p/272419",
+     "price": 19989,
+     "title": "SONY WH-1000XM5 Bluetooth Headphone with Mic (Auto Noise Cancellation Optimizer, Over Ear, Blue)",
+     "rating": "5.0",
+     "in_stock": true
+    }
+   ],
+   "blocked_reason": ""
+  }
+ },
+ {
+  "store": "amazon",
+  "url": "https://www.amazon.in/s?k=sony+wh-1000xm5",
+  "run_id": "2b19a883-3fea-4d3f-9293-c7c9db698e07",
+  "status": "COMPLETED",
+  "steps": [
+   "Loading Amazon.in search",
+   "Skipping sponsored accessory listings",
+   "Opening result cards to confirm stock",
+   "Extracting 3 matching listings"
+  ],
+  "result": {
+   "products": [
+    {
+     "mrp": 34990,
+     "url": "https://www.amazon.in/Sony-WH-1000XM5-Cancelling-Headphones-Connectivity/dp/B0BZP2H373",
+     "price": 27490,
+     "title": "Sony WH-1000XM5 Best Active Noise Cancelling Wireless Bluetooth Over Ear Headphones with Mic for Clear Calling,Battery Life 30 Hours-Mid Night Blue",
+     "rating": "4.4 out of 5 stars",
+     "in_stock": true
+    },
+    {
+     "mrp": 34990,
+     "url": "https://www.amazon.in/Sony-WH-1000XM5-Cancelling-Headphones-Connectivity/dp/B09XS7JWHH",
+     "price": 27990,
+     "title": "Sony WH-1000XM5 Wireless Noise Cancelling Over-Ear Headphones (Black)",
+     "rating": "4.4 out of 5 stars",
+     "in_stock": true
+    },
+    {
+     "mrp": 34990,
+     "url": "https://www.amazon.in/Sony-WH-1000XM5-Cancelling-Headphones-Connectivity/dp/B09XSDMT4F",
+     "price": 27990,
+     "title": "Sony WH-1000XM5 Wireless Noise Cancelling Over-Ear Headphones (Silver)",
+     "rating": "4.4 out of 5 stars",
+     "in_stock": true
+    }
+   ]
+  }
+ }
+]

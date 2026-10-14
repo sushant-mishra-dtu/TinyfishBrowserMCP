@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "dealscout-replay", "runtimeExecutable": "python", "runtimeArgs": ["dealscout/server.py", "--replay"], "port": 8787 },
+    { "name": "dealscout", "runtimeExecutable": "python", "runtimeArgs": ["dealscout/server.py"], "port": 8787 }
+  ]
+}
