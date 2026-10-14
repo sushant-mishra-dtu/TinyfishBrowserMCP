@@ -1,6 +1,6 @@
 # Deal Scout UI plan
 
-Planning handoff · 14 October 2026 · based on the current README, ui.html, server.py, agent.py and saved result screenshot. Claude is working concurrently; confirm API details again before implementation.
+Planning handoff · 14 October 2026. This is a design proposal, not the shipped feature list. See [technical architecture](ARCHITECTURE.md) for current behavior and the [README](../README.md) for setup. The app files now live at the repository root.
 
 ## Product direction
 
@@ -48,7 +48,7 @@ Each selected store gets a compact card:
 
 Keep cards in the selected-store order so incoming events do not move them around. Use subtle motion and respect reduced-motion preferences. Do not repeatedly announce every log line to screen readers.
 
-Current API limitation: normalized offers arrive in the final `done` payload. A per-agent COMPLETE event can finish a progress indicator, but the first UI pass should wait for `done` to render comparable results. Showing normalized prices as each store completes requires a new server event.
+Current API: normalized offers arrive per store through `agent` events with `type: STORE_RESULT`, and again in the final `done` payload. The current UI renders each store as it finishes; aggregate comparison waits for `done`.
 
 ### 3. Results
 
@@ -136,7 +136,7 @@ On interruption, closing the browser stream does not cancel the backend worker. 
 
 ### First pass: UI using existing endpoints
 
-Change `dealscout/ui.html`: layout, visual tokens, labeled form, stable progress cards, condensed activity, result hierarchy, grouped offers, inline validation, confirmation polish, responsive states, and recent-query list. Keep `/api/stores`, `/api/scout`, and `/api/history` as the integration points.
+Change `ui.html` at the repository root: layout, visual tokens, labeled form, stable progress cards, condensed activity, result hierarchy, grouped offers, inline validation, confirmation polish, responsive states, and recent-query list. Keep `/api/stores`, `/api/scout`, and `/api/history` as the integration points.
 
 Keep a small explicit UI state object: phase, submitted query/target/stores, startedAt, per-store activity, final results, and connection error. Use textContent for external text or consistent escaping; validate links independently of HTML escaping.
 
@@ -148,7 +148,7 @@ Do not deduce structured failure categories by loosely parsing arbitrary provide
 2. Add explicit run metadata: mode (live/replay), recorded source timestamp, run ID, and checked-at timestamp with timezone.
 3. Normalize availability policy across best offer, ties, savings, and history. Current best-offer logic accepts unknown availability, while history minimums can include out-of-stock offers.
 4. Add structured alert types instead of styling by matching English alert strings.
-5. If needed later, emit normalized per-store results as they finish; add cancellation and resumable run lookup before offering Stop or automatic reconnect.
+5. Normalized per-store results now arrive through `STORE_RESULT`. Add cancellation and resumable run lookup before offering Stop or automatic reconnect.
 6. Store product/variant and availability context before presenting historical comparisons as like-for-like price drops.
 
 ### Review checklist

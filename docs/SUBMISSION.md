@@ -1,5 +1,9 @@
 # Submission — Deal Scout (DTU: Personal Agents on TinyFish)
 
+[Project overview](../README.md) · [Setup and usage](USAGE.md) · [Technical architecture](ARCHITECTURE.md)
+
+Run commands below from the repository root. Prices in this document describe the saved example, not current quotes. Live results can differ; use `python server.py --replay` with `sony wh-1000xm5` for a reproducible recorded demo. Replay is marked in activity messages and writes to the same local history as live checks.
+
 ## Short explanation (paste into the form)
 
 **Deal Scout** is my personal price agent. I type a product ("sony wh-1000xm5") and it sends four
@@ -16,9 +20,7 @@ around sales. It's a weekly errand that now takes one command.
 live dashboard where you can watch each agent. The same workflow also ships as a Claude Code skill that
 runs through the TinyFish MCP connector.
 
-**Safety:** it never logs in, adds to cart, or pays. Opening the best deal requires an explicit
-confirm. Failed or captcha-blocked stores are reported with the reason and the comparison continues
-with the rest; prices are never invented.
+**Purchase boundary:** agent instructions prohibit login, cart, and payment actions. Opening the best deal in the UI requires confirmation; the CLI prompts by default and offers an explicit `--yes-open` override. Failed or captcha-blocked stores are reported with the supplied reason and the comparison continues with the rest. Unknown availability can remain eligible, so the store page is the final check.
 
 **Works across inputs:** any product query, any subset of stores, optional target price.
 
@@ -27,13 +29,12 @@ with the rest; prices are never invented.
 1. `python server.py` and open http://localhost:8787 (blur nothing personal here — no login is used).
 2. Type **sony wh-1000xm5**, target **21000**, click *Scout prices*. Show 4 cards going live, click one
    **▶ watch the agent live** link to show the TinyFish browser working.
-3. Result: Rs 19,989 on Flipkart/Croma, **"You save Rs 7,501 vs Amazon.in"**, TARGET HIT alert,
-   Reliance card says the only match is out of stock (failure handled, not faked).
+3. For the saved Sony example: Rs 19,989 on Flipkart/Croma, a Rs 7,501 displayed difference against Amazon.in, and a TARGET HIT alert. Reliance reports its only match unavailable. Explain that these are recorded observations and that the comparison does not verify equivalent variants or final checkout costs. For a live run, describe the actual returned values instead.
 4. Click *Open this deal…* → show the confirmation ("will not add to cart, log in, or pay") → *Not now*.
-5. Run a second product (e.g. **apple airpods pro 2**) to show it isn't hardcoded.
+5. In live mode, run a second product (e.g. **apple airpods pro 2**) to show query-driven extraction. The bundled replay supports only its recorded Sony query.
 6. Terminal: `python dealscout.py "sony wh-1000xm5" --target 18000 --every 360` (watch mode).
 
-Screenshots are in `screenshots/`.
+Screenshots are in [screenshots/](screenshots/). The architecture and API contract are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## LinkedIn post (draft)
 

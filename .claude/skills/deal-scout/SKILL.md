@@ -38,7 +38,7 @@ websites with the TinyFish connector; the user makes every buying decision.
    > Only if blocked by a captcha or there are no matching results at all, return an empty products list and
    > explain in blocked_reason.
 
-   `output_schema`: the same schema as `OUTPUT_SCHEMA` in `dealscout/agent.py`.
+   `output_schema`: the same schema as `OUTPUT_SCHEMA` in `agent.py`.
 
 2. Poll each run with `get_run` every ~30s until COMPLETED or FAILED.
 
@@ -50,7 +50,7 @@ websites with the TinyFish connector; the user makes every buying decision.
 
 4. Show a table sorted by price (store, price, MRP, % off, title, link) and name the best deal.
 
-5. Price history: read and append to `dealscout/price_history.json`
+5. Price history: read and append to `price_history.json` at the repository root
    (`{ "<product lowercased>": { "runs": [ { "at": ISO time, "prices": { store: cheapest } } ] } }`).
    Report drops/rises versus the previous run and "TARGET HIT" if `target` is met.
 
